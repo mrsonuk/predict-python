@@ -7,14 +7,16 @@ from runtime.models import DemoReplayer
 from .replay_core import prepare
 from rq_scheduler import Scheduler
 from datetime import timedelta
+import datetime
 
 scheduler = Scheduler(connection=django_rq.get_connection('default'), interval=5)
 
 
 class Replayer():
 
-    def __init__(self, id, reg_id, class_id):
+    def __init__(self, id, reg_id, class_id, nn=False):
         self.log_id = id
+        self.nn = nn
         self.class_id = class_id
         self.reg_id = reg_id
         self.log = None
@@ -42,10 +44,16 @@ class Replayer():
         for event in trace:
             if replayer.running:
                 c = c + (randint(1, 3)*5)
-                scheduler.enqueue_in(timedelta(seconds=c), prepare, event, trace, log, replayer.id, self.reg_id, self.class_id, self.log)
+                start = datetime.datetime.now()
+                #scheduler.enqueue_in(timedelta(seconds=1), prepare, event, trace, log, replayer.id, self.reg_id, self.class_id, self.log, nn=self.nn)
+                prepare (event, trace, log, replayer.id, self.reg_id, self.class_id, self.log, nn=self.nn)
+                f = open("runtime_bpi13_class_415", 'a')
+                end = datetime.datetime.now()
+                f.write(str((end - start).total_seconds()))
+                f.write("\n")
             else:
                 return
-        scheduler.enqueue_in(timedelta(seconds=c), prepare, event, trace, log, replayer.id, self.reg_id, self.class_id, self.log, end=True)
+        scheduler.enqueue_in(timedelta(seconds=1), prepare, event, trace, log, replayer.id, self.reg_id, self.class_id, self.log, nn=self.nn, end=True)
         return
 
     def events_list(self, logs, id):
@@ -53,9 +61,10 @@ class Replayer():
             for trace in log:
                 replayer = DemoReplayer.objects.get(pk=id)
                 if replayer.running:
-                    t=threading.Thread(target=self.send_events, args=(trace, log, replayer))
+                    """t=threading.Thread(target=self.send_events, args=(trace, log, replayer))
                     t.daemon = True
-                    t.start()
+                    t.start()"""
+                    self.send_events(trace, log, replayer)
                 else:
                     replayer.delete()
                     return
