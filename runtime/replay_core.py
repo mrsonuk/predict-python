@@ -149,30 +149,6 @@ def xMap_to_dict(xmap):
     for key in xmap.keys():
         d[key] = str(xmap.get(key))
     return d
-
-def next_activities(events, trace):
-    event_log = open('../Process-Sequence-Prediction-with-A-priori-knowledge/data/Sepsis_test.csv', 'w')
-    csvwriter = csv.writer(event_log, delimiter=';')
-    log_headers = ['CaseID', 'ActivityID', 'CompleteTimestamp']
-    csvwriter.writerow(log_headers)
-    for event in events:
-        event_row = []
-        ev_xmap = XAttributeMap(json.loads(event.config))
-        tr_xmap = XAttributeMap(json.loads(trace.config))
-        event_row.append(tr_xmap.get('concept:name'))
-        event_row.append(ev_xmap.get('concept:name'))
-        tstamp = ev_xmap.get('time:timestamp')
-        event_row.append(tstamp[:-6])
-        csvwriter.writerow(event_row)
-    event_log.close()
-    py2command = "/home/stefano/Scrivania/Tirocinio/right/Process-Sequence-Prediction-with-A-priori-knowledge/src/support_scripts/csv_converter.py"
-    process = subprocess.Popen(py2command.split(), stdout=subprocess.PIPE)
-    output, error = process.communicate()
-    exitcode = process.wait()
-    py2commandrun = "/home/stefano/Scrivania/Tirocinio/right/Process-Sequence-Prediction-with-A-priori-knowledge/src/evaluate_next_activity_and_time.py"
-    process = subprocess.Popen(py2commandrun.split(), stdout=subprocess.PIPE)
-    output, error = process.communicate()
-    exitcode = process.wait()
     
         
     
